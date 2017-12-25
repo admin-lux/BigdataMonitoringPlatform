@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hjonline.bigdata.mapper.TokenVerifyMapper">
+	<resultMap id="baseResultMap" type="com.hjonline.bigdata.model.TokenVerify">
+		<id column="id" property="id" />
+		<result column="user_id" property="userId" />
+		<result column="token" property="token" />
+		<result column="state" property="state" />
+		<result column="lastdate" property="lastdate" />
+		<result column="cr_date" property="crdate" />
+		<result column="up_date" property="update" />
+	</resultMap>
+
+	<sql id="columns">
+		id, user_id, token, state, lastdate, cr_date, up_date
+	</sql>
+
+	<insert id="addTokenLog" parameterType="com.hjonline.bigdata.model.TokenVerify"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		insert into token_verify(
+		<include refid="columns" />
+		) values(null, #{userId}, #{token}, 1, now(), now(), now())
+	</insert>
+
+	<update id="upTokenLog" parameterType="com.hjonline.bigdata.model.TokenVerify"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		update token_verify
+		set state=#{state}, lastdate = #{lastdate}, up_date = now() where id=#{id}
+	</update>
+
+	<select id="selectByParams" parameterType="java.util.HashMap"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from token_verify
+		<where>
+			<if test="token!=null">
+				and token = #{token}
+			</if>
+			<if test="userId!=null">
+				and user_id=#{userId}
+			</if>
+			<if test="state!=null">
+				and state=#{state}
+			</if>
+		</where>
+	</select>
+</mapper>

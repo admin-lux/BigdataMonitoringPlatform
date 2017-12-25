@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hjonline.bigdata.mapper.UsersMapper">
+	<resultMap id="baseResultMap" type="com.hjonline.bigdata.model.Users">
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="account" property="account" />
+		<result column="password" property="password" />
+		<result column="status" property="status" />
+		<result column="admin" property="admin" />
+		<result column="lastdate" property="lastdate" />
+		<result column="crdate" property="crdate" />
+		<result column="update" property="update" />
+	</resultMap>
+
+	<sql id="columns">
+		id, `name`,account,`password`,`status`,	admin, lastdate, crdate,`update`
+	</sql>
+	
+
+	<insert id="insert" parameterType="com.hjonline.bigdata.model.Users"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		insert into users(<include refid="columns" />) values(null, #{name}, #{account}, #{password}, 1, 0, null, #{crdate}, #{update})
+	</insert>
+	
+	<update id="updateByPrimaryKey" parameterType="com.hjonline.bigdata.model.Users" 
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		update users set `name`=#{name}, `account`=#{account}, `password`=#{password}, `status`=#{status}, `admin`=#{admin}, `lastdate`=#{lastdate}, `crdate`=#{crdate}, `update`=#{update} where id = #{id}
+	</update>
+	
+	<select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="baseResultMap">
+		select <include refid="columns" /> from users where id =#{id}
+	</select>
+	
+	<select id="selectByAccountAndPwd" parameterType="java.util.HashMap" resultMap="baseResultMap">
+		select <include refid="columns" /> from users 
+		<where>
+            <if test="account!=null">
+                and `account`=#{account}
+            </if>
+            <if test="password!=null">
+                and `password` = #{password}
+            </if>
+        </where>
+	</select>
+	
+	<select id="selectAllUsers" parameterType="java.util.HashMap" resultMap="baseResultMap">
+        select <include refid="columns" /> from users 
+        <where>
+            <if test="status!=null">
+                and `status`=#{status}
+            </if>
+            <if test="name!=null">
+                and `name` LIKE '%${name}%'
+            </if>
+            <if test="account!=null">
+                and account LIKE '%${account}%'
+            </if>
+        </where>
+    </select>
+	
+	<select id="countUsers" parameterType="java.util.HashMap" resultType="java.lang.Long">
+        select count(*) from users 
+        <where>
+            <if test="status!=null">
+                and `status`=#{status}
+            </if>
+            <if test="name!=null">
+                and `name` LIKE '%${name}%'
+            </if>
+            <if test="account!=null">
+                and account LIKE '%${account}%'
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

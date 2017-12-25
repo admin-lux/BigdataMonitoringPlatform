@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hjonline.bigdata.mapper.ImportMapper">
+	<resultMap id="baseResultMap" type="com.hjonline.bigdata.model.Import">
+		<id column="id" property="id" />
+		<result column="datasource_id" property="datasourceId" />
+		<result column="task_id" property="taskId" />
+		<result column="table_name" property="tableName" />
+		<result column="hbase_name" property="hbaseName" />
+		<result column="columns" property="columns" />
+		<result column="num_mappers" property="numMappers" />
+		<result column="column_family" property="columnFamily" />
+		<result column="row_key" property="rowKey" />
+		<result column="split_by" property="splitBy" />
+		<result column="add_row_key" property="addRowKey" />
+		<result column="before_import" property="beforeImport" />
+		<result column="import_type" property="importType" />
+		<result column="increment_if" property="incrementIf" />
+		<result column="state" property="state" />
+		<result column="last_user_id" property="lastUserId" />
+		<result column="lastdate" property="lastdate" />
+		<result column="cr_date" property="crdate" />
+		<result column="up_date" property="update" />
+	</resultMap>
+
+	<sql id="columns">
+		id, datasource_id, task_id, table_name,
+		hbase_name,
+		`columns`, num_mappers, column_family, row_key, split_by,
+		add_row_key,
+		before_import, import_type,
+		increment_if, `state`, last_user_id,
+		lastdate,
+		cr_date,
+		up_date
+	</sql>
+
+
+	<insert id="addImportConf" parameterType="com.hjonline.bigdata.model.Import"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		insert ignore into imports(
+		<include refid="columns" />
+		) values(null, #{datasourceId}, #{taskId},
+		#{tableName}, #{hbaseName},
+		#{columns}, #{numMappers},
+		#{columnFamily}, #{rowKey},
+		#{splitBy},
+		#{addRowKey}, #{beforeImport},
+		#{importType},
+		#{incrementIf},
+		1,#{lastUserId}, #{lastdate}, #{crdate},
+		#{update})
+	</insert>
+
+	<update id="upImportConf" parameterType="com.hjonline.bigdata.model.Import"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		update imports
+		set
+		datasource_id=#{datasourceId}, task_id=#{taskId},
+		table_name=#{tableName},
+		hbase_name=#{hbaseName}, `columns`=#{columns},
+		num_mappers=#{numMappers}, column_family=#{columnFamily},
+		row_key=#{rowKey}, split_by=#{splitBy}, add_row_key=#{addRowKey},
+		before_import=#{beforeImport}, import_type=#{importType},
+		increment_if=#{incrementIf}, `state`=#{state},
+		last_user_id=#{lastUserId},
+		lastdate=#{lastdate}, cr_date=#{crdate},
+		up_date=#{update}
+		where id = #{id}
+	</update>
+
+	<select id="selectById" parameterType="java.lang.Long"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from imports where id =#{id}
+	</select>
+
+	<select id="selectByTableName" parameterType="java.lang.String"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from imports where table_name =#{tableName}
+	</select>
+
+	<select id="selectByParams" parameterType="java.util.HashMap"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from imports
+		<where>
+			<if test="taskId!=null">
+				and `task_id`=#{taskId}
+			</if>
+			<if test="tableName!=null">
+				and `table_name`=#{tableName}
+			</if>
+			<if test="datasource_id!=null">
+				and `datasource_id`=#{datasourceId}
+			</if>
+		</where>
+	</select>
+
+	<select id="selectByParams2" parameterType="java.util.HashMap"
+		resultMap="importJoinMap">
+		select
+		i.id, i.datasource_id, i.task_id, i.table_name,
+		i.hbase_name,
+		i.`columns`, i.num_mappers, i.column_family, i.row_key,
+		i.split_by,
+		i.add_row_key, i.before_import, i.import_type,
+		i.increment_if,
+		i.`state`, i.last_user_id, i.lastdate, i.cr_date, i.up_date, t.`name`
+		as task_name
+		from imports i
+		LEFT JOIN tasks t
+		on i.task_id =
+		t.id
+		<where>
+			<if test="taskName!=null">
+				and t.`name`=#{taskName}
+			</if>
+			<if test="tableName!=null">
+				and i.`table_name`=#{tableName}
+			</if>
+		</where>
+	</select>
+
+	<select id="selectPageImports" parameterType="java.util.HashMap"
+		resultMap="importJoinMap">
+		select
+		i.id, i.datasource_id, i.task_id, i.table_name,
+		i.hbase_name,
+		i.`columns`, i.num_mappers, i.column_family, i.row_key,
+		i.split_by,
+		i.add_row_key, i.before_import, i.import_type,
+		i.increment_if,
+		i.`state`, i.last_user_id, i.lastdate, i.cr_date, i.up_date,
+		d.sys_name, d.database_name, u.`name`, t.`name` as task_name
+		from
+		imports i left join
+		datasources d
+		on
+		i.datasource_id =
+		d.id
+		left join users
+		u
+		on i.last_user_id = u.id
+		left join tasks t
+		on i.task_id = t.id
+		where
+		i.`state`=1
+		<if test="sysName!=null">
+			and d.`sys_name` LIKE '%${sysName}%'
+		</if>
+		<if test="databaseName!=null">
+			and d.`database_name` LIKE '%${databaseName}%'
+		</if>
+		<if test="tableName!=null">
+			and i.`table_name` LIKE '%${tableName}%'
+		</if>
+		<if test="taskId!=null">
+			and t.id=#{taskId}
+		</if>
+	</select>
+	<resultMap id="importJoinMap" type="com.hjonline.bigdata.model.Import">
+		<id column="id" property="id" />
+		<result column="datasource_id" property="datasourceId" />
+		<result column="task_id" property="taskId" />
+		<result column="schema_name" property="schemaName" />
+		<result column="table_name" property="tableName" />
+		<result column="hbase_name" property="hbaseName" />
+		<result column="columns" property="columns" />
+		<result column="num_mappers" property="numMappers" />
+		<result column="column_family" property="columnFamily" />
+		<result column="row_key" property="rowKey" />
+		<result column="split_by" property="splitBy" />
+		<result column="add_row_key" property="addRowKey" />
+		<result column="before_import" property="beforeImport" />
+		<result column="import_type" property="importType" />
+		<result column="increment_if" property="incrementIf" />
+		<result column="state" property="state" />
+		<result column="last_user_id" property="lastUserId" />
+		<result column="lastdate" property="lastdate" />
+		<result column="cr_date" property="crdate" />
+		<result column="up_date" property="update" />
+		<result column="sys_name" property="sysName" />
+		<result column="database_name" property="databaseName" />
+		<result column="name" property="name" />
+		<result column="task_name" property="taskName" />
+	</resultMap>
+
+
+	<select id="countImports" parameterType="java.util.HashMap"
+		resultType="java.lang.Long">
+		select
+		count(*)
+		from
+		imports
+		where `state`= 1
+		<if test="taskId!=null">
+			and task_id=#{taskId}
+		</if>
+	</select>
+
+</mapper>

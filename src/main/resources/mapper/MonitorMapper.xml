@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hjonline.bigdata.mapper.MonitorMapper">
+	<resultMap id="baseResultMap" type="com.hjonline.bigdata.model.Monitor">
+		<id column="id" property="id" />
+		<result column="taskname" property="taskname" />
+		<result column="tablename" property="tablename" />
+		<result column="stime" property="stime" />
+		<result column="etime" property="etime" />
+		<result column="rtime" property="rtime" />
+		<result column="qcount" property="qcount" />
+		<result column="ecount" property="ecount" />
+		<result column="result" property="result" />
+		<result column="diff" property="diff" />
+		<result column="createtime" property="createtime" />
+		<result column="updatetime" property="updatetime" />
+	</resultMap>
+
+	<sql id="columns">
+		id, taskname, tablename, stime, etime, rtime, qcount,
+		ecount, result, diff
+		, createtime, updatetime
+	</sql>
+
+	<select id="selectByTaskName" parameterType="java.lang.String"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from export_info where taskname = #{taskName}
+	</select>
+
+
+	<select id="selectByDiff" parameterType="java.lang.String"
+		resultType="java.util.HashMap">
+		select * from (select count(*) positive from export_info where diff
+		&lt; 0 and result ='success'
+		<if test="taskName!=null">
+			and taskname=#{taskName}
+		</if>
+		) a,(select count(*) negative from export_info where diff &gt; 0 and
+		result ='success'
+		<if test="taskName!=null">
+			and taskname=#{taskName}
+		</if>
+		) b
+	</select>
+
+
+	<select id="countMonitors" parameterType="java.lang.String"
+		resultType="java.lang.Long">
+		select count(*) from export_info
+		<where>
+			<if test="taskName!=null">
+				and taskname =#{taskName}
+			</if>
+		</where>
+	</select>
+
+
+	<select id="selectFaileds" parameterType="java.lang.String"
+		resultMap="baseResultMap">
+		select a.* from export_info a INNER JOIN
+		(select
+		taskname,tablename,max(etime) etime from export_info GROUP BY
+		taskname,tablename) b
+		on a.taskname = b.taskname and a.tablename =
+		b.tablename and a.etime =
+		b.etime where a.result='failed' and
+		a.taskname = #{taskName}
+		ORDER BY a.etime DESC;
+	</select>
+
+	<select id="selectMonitors" parameterType="java.util.HashMap"
+		resultMap="resultGroupByMonitor">
+		select taskname, min(stime) as stime, max(etime) as etime,
+		(max(etime)- min(stime)) as rtime from export_info
+		<where>
+			<if test="taskName!=null">
+				and taskname LIKE '%${taskName}%'
+			</if>
+		</where>
+		group by taskname ORDER BY taskname DESC
+	</select>
+	<resultMap id="resultGroupByMonitor" type="com.hjonline.bigdata.model.Monitor">
+		<result column="taskname" property="taskname" />
+		<result column="stime" property="stime" />
+		<result column="etime" property="etime" />
+		<result column="rtime" property="rtime" />
+	</resultMap>
+
+
+	<select id="selectMonitorInfos" parameterType="java.util.HashMap"
+		resultMap="resultMonitorInfos">
+		select
+		t1.taskname,t1.stime,t1.etime,t1.rtime,t2.positive,t3.negative,t4.faileds,t5.result
+		from export_info_select1 t1
+		LEFT JOIN export_info_positive t2
+		on t1.taskname=t2.taskname
+		LEFT JOIN export_info_negative t3
+		on t1.taskname=t3.taskname
+		LEFT JOIN export_info_failed_count t4
+		ON t1.taskname=t4.taskname
+		LEFT JOIN export_info_result t5
+		ON t1.taskname=t5.taskname
+		<where>
+			<if test="taskName!=null">
+				and t1.taskname LIKE '%${taskName}%'
+			</if>
+			<if test="result!=null">
+				<if test="result==0">
+				and t5.result is null
+				</if>
+				<if test="result==1">
+				and t5.result = 0
+				</if>
+				<if test="result==2">
+				and t5.result &gt; 0
+				</if>
+			</if>
+		</where>
+		ORDER BY t1.taskname DESC
+	</select>
+	<resultMap id="resultMonitorInfos" type="com.hjonline.bigdata.model.Monitor">
+		<result column="taskname" property="taskname" />
+		<result column="stime" property="stime" />
+		<result column="etime" property="etime" />
+		<result column="rtime" property="rtime" />
+		<result column="positive" property="positive" />
+		<result column="negative" property="negative" />
+		<result column="faileds" property="faileds" />
+		<result column="result" property="result" />
+	</resultMap>
+
+
+</mapper>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hjonline.bigdata.mapper.LoginLogMapper">
+	<resultMap id="baseResultMap" type="com.hjonline.bigdata.model.LoginLog">
+		<id column="id" property="id" />
+		<result column="user_id" property="user_id" />
+		<result column="account" property="account" />
+		<result column="password" property="password" />
+		<result column="logindate" property="logindate" />
+		<result column="ip" property="ip" />
+		<result column="state" property="state" />
+		<result column="desc" property="desc" />
+		<result column="crdate" property="crdate" />
+		<result column="update" property="update" />
+	</resultMap>
+
+	<sql id="columns">
+		id, user_id, account, `password`, logindate, ip, state, `desc`, crdate, `update`
+	</sql>
+
+	<insert id="addLog" parameterType="com.hjonline.bigdata.model.LoginLog"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		insert into login_log(
+		<include refid="columns" />
+		) values(null, #{user_id}, #{account}, #{password}, #{logindate}, #{ip}, #{state}, #{desc},
+		#{crdate}, #{update})
+	</insert>
+
+
+	<resultMap id="baseResultJoinColumns" type="com.hjonline.bigdata.model.UsersJoinLoginLog">
+		<id column="id" property="id" />
+		<result column="user_id" property="user_id" />
+		<result column="logindate" property="logindate" />
+		<result column="ip" property="ip" />
+		<result column="state" property="state" />
+		<result column="desc" property="desc" />
+		<result column="crdate" property="crdate" />
+		<result column="update" property="update" />
+		<result column="name" property="name" />
+		<result column="account" property="account" />
+		<result column="password" property="password" />
+	</resultMap>
+
+	<select id="findParams" parameterType="java.util.HashMap"
+		resultMap="baseResultJoinColumns">
+		select
+		ll.id, ll.user_id, ll.account, ll.`password`, ll.logindate, ll.ip, ll.state, ll.`desc`,
+		ll.crdate, ll.`update`,u.`name`
+		from login_log ll
+		left join
+		users u
+		on ll.user_id = u.id
+		<where>
+			<if test="name!=null">
+				u.`name` LIKE '%${name}%'
+			</if>
+			<if test="account!=null">
+				and u.account LIKE '%${account}%'
+			</if>
+			<if test="stdate!=null and enddate!=null">
+				and ((
+				<if test="stdate!=null">
+					ll.crdate &gt;=#{stdate}
+				</if>
+				<if test="enddate!=null">
+					and ll.crdate &lt;=#{enddate}
+				</if>
+				)
+				or
+				(
+				<if test="stdate!=null">
+					ll.update &gt;=#{stdate}
+				</if>
+				<if test="enddate!=null">
+					and ll.update &lt;=#{enddate}
+				</if>
+				))
+			</if>
+		</where>
+	</select>
+
+
+
+</mapper>

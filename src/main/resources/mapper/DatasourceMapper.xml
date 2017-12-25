@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hjonline.bigdata.mapper.DatasourceMapper">
+	<resultMap id="baseResultMap" type="com.hjonline.bigdata.model.Datasources">
+		<id column="id" property="id" />
+		<result column="sys_name" property="sysName" />
+		<result column="database_name" property="databaseName" />
+		<result column="source_type" property="sourceType" />
+		<result column="user_name" property="userName" />
+		<result column="pwd" property="pwd" />
+		<result column="connect" property="connect" />
+		<result column="user_id" property="userId" />
+		<result column="lastdate" property="lastdate" />
+		<result column="state" property="state" />
+		<result column="cr_date" property="crdate" />
+		<result column="up_date" property="update" />
+	</resultMap>
+
+	<sql id="columns">
+		id,sys_name,database_name,source_type,user_name,pwd,connect,user_id,lastdate,state
+		,cr_date,up_date
+	</sql>
+
+
+	<insert id="addDatasource" parameterType="com.hjonline.bigdata.model.Datasources"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		insert into datasources(
+		<include refid="columns" />
+		) values(null, #{sysName}, #{databaseName}, #{sourceType},
+		#{userName}, #{pwd}, #{connect}, #{userId}, #{lastdate}, #{state},
+		#{crdate}, #{update})
+	</insert>
+
+	<update id="upDatasource" parameterType="com.hjonline.bigdata.model.Datasources"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		update datasources
+		set
+		sys_name=#{sysName}, database_name=#{databaseName},
+		source_type=#{sourceType},
+		user_name=#{userName}, pwd=#{pwd},
+		connect=#{connect}, user_id=#{userId}, lastdate=#{lastdate},
+		state=#{state},
+		up_date=#{update} where id = #{id}
+	</update>
+
+	<select id="selectById" parameterType="java.lang.Long"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from datasources where id =#{id}
+	</select>
+	
+	<select id="selectBySysName" parameterType="java.lang.String"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from datasources
+		<where>
+			<if test="sysName!=null">
+				and `sys_name`=#{sysName}
+			</if>
+		</where>
+	</select>
+
+	<select id="selectByParams" parameterType="java.util.HashMap"
+		resultMap="datasourceJoinUsers">
+		select
+		d.id, d.sys_name, d.database_name, d.source_type, d.user_name,
+		d.pwd, d.`connect`, d.user_id, d.`lastdate`, d.`state`, d.cr_date,
+		d.up_date, u.`name`, u.`account`
+		from datasources d left join users u
+		on d.user_id = u.id
+		<where>
+			<if test="sysName!=null">
+				and d.`sys_name` LIKE '%${sysName}%'
+			</if>
+			<if test="databaseName!=null">
+				and d.`database_name` LIKE '%${databaseName}%'
+			</if>
+			<if test="sourceType!=null">
+				and d.source_type=#{sourceType}
+			</if>
+			<if test="state!=null">
+				and d.`state`=#{state}
+			</if>
+		</where>
+	</select>
+	<resultMap id="datasourceJoinUsers" type="com.hjonline.bigdata.model.Datasources">
+		<id column="id" property="id" />
+		<result column="sys_name" property="sysName" />
+		<result column="database_name" property="databaseName" />
+		<result column="source_type" property="sourceType" />
+		<result column="user_name" property="userName" />
+		<result column="pwd" property="pwd" />
+		<result column="connect" property="connect" />
+		<result column="user_id" property="userId" />
+		<result column="lastdate" property="lastdate" />
+		<result column="state" property="state" />
+		<result column="cr_date" property="crdate" />
+		<result column="up_date" property="update" />
+	</resultMap>
+
+</mapper>

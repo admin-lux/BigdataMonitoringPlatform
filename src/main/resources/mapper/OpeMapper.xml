@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hjonline.bigdata.mapper.OpeMapper">
+	<resultMap id="baseResultMap" type="com.hjonline.bigdata.model.Ope">
+		<id column="id" property="id" />
+		<result column="opdate" property="opdate" />
+		<result column="user_id" property="user_id" />
+		<result column="ip" property="ip" />
+		<result column="fun_name" property="funName" />
+		<result column="state" property="state" />
+		<result column="desc" property="desc" />
+		<result column="cr_date" property="crdate" />
+		<result column="up_date" property="update" />
+	</resultMap>
+
+	<sql id="columns">
+		id, `opdate`,user_id,`ip`,`fun_name`,state, `desc`, cr_date,`up_date`
+	</sql>
+	
+
+	<insert id="addOpe" parameterType="com.hjonline.bigdata.model.Ope"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		insert into opes(<include refid="columns" />) values(null, #{opdate}, #{user_id}, #{ip}, #{funName}, #{state}, #{desc}, #{crdate}, #{update})
+	</insert>
+	
+	<select id="selectOpes" parameterType="java.util.HashMap" resultMap="opesJoinUsersResultMap">
+		select o.id, o.`opdate`,o.user_id,o.`ip`,o.`fun_name`,	o.state, o.`desc`, o.cr_date,o.`up_date`,u.`name`,u.`account` from opes o 
+		left join users u on o.user_id=u.id
+		<where>
+			<if test="name!=null">
+				u.`name` LIKE '%${name}%'
+			</if>
+			<if test="account!=null">
+				and u.account LIKE '%${account}%'
+			</if>
+			<if test="stdate!=null and enddate!=null">
+				and ((
+				<if test="stdate!=null">
+					o.cr_date &gt;=#{stdate}
+				</if>
+				<if test="enddate!=null">
+					and o.cr_date &lt;=#{enddate}
+				</if>
+				)
+				or
+				(
+				<if test="stdate!=null">
+					o.up_date &gt;=#{stdate}
+				</if>
+				<if test="enddate!=null">
+					and o.up_date &lt;=#{enddate}
+				</if>
+				))
+			</if>
+		</where>
+	</select>
+	
+	<resultMap id="opesJoinUsersResultMap" type="com.hjonline.bigdata.model.Ope">
+		<id column="id" property="id" />
+		<result column="opdate" property="opdate" />
+		<result column="user_id" property="user_id" />
+		<result column="ip" property="ip" />
+		<result column="fun_name" property="funName" />
+		<result column="state" property="state" />
+		<result column="desc" property="desc" />
+		<result column="cr_date" property="crdate" />
+		<result column="up_date" property="update" />
+		<result column="name" property="name" />
+		<result column="account" property="account" />
+	</resultMap>
+	
+</mapper>

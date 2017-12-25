@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hjonline.bigdata.mapper.TaskMapper">
+	<resultMap id="baseResultMap" type="com.hjonline.bigdata.model.Tasks">
+		<id column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="conf_name" property="confName" />
+		<result column="file_path" property="filePath" />
+		<result column="state" property="state" />
+		<result column="rundate" property="rundate" />
+		<result column="desc" property="desc" />
+		<result column="cr_date" property="crdate" />
+		<result column="up_date" property="update" />
+	</resultMap>
+
+	<sql id="columns">
+		id,`name`, conf_name, file_path, state, rundate,`desc`,cr_date,up_date
+	</sql>
+
+
+	<insert id="addTask" parameterType="com.hjonline.bigdata.model.Tasks"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		insert into tasks(
+		<include refid="columns" />
+		) values(null, #{name}, #{confName}, #{filePath}, #{state}, #{rundate}, #{desc},
+		#{crdate}, #{update})
+	</insert>
+
+	<update id="upTask" parameterType="com.hjonline.bigdata.model.Tasks"
+		keyProperty="id" keyColumn="ID" useGeneratedKeys="true">
+		update tasks set
+		`name`=#{name}, `conf_name`=#{confName}, `file_path`=#{filePath}, `state`=#{state},
+		`rundate`=#{rundate}, `desc`=#{desc}, `cr_date`=#{crdate},
+		`up_date`=#{update} where id = #{id}
+	</update>
+
+	<select id="selectById" parameterType="java.lang.Long"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from tasks where id =#{id}
+	</select>
+
+	<select id="selectTasks" parameterType="java.util.HashMap"
+		resultMap="baseResultMap">
+		select
+		<include refid="columns" />
+		from tasks
+		where `state`=1
+		<if test="name!=null">
+			and `name` LIKE '%${name}%'
+		</if>
+
+	</select>
+
+
+
+</mapper>
